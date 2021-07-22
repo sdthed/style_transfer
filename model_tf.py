@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, Tuple, List
 import numpy as np
 import tensorflow as tf
 
@@ -39,7 +39,7 @@ def print_vgg_layer_names():
         print(layer.name)
 
 
-def vgg_layers(layer_names: list[str]) -> tf.keras.Model:
+def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
     """ Creates a vgg model that returns a list of intermediate output layers """
     vgg = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
     vgg.trainable = False
