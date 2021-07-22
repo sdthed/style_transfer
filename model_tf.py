@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, List
+from typing import Callable, Tuple, List, Dict
 import numpy as np
 import tensorflow as tf
 
@@ -48,7 +48,7 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
     return tf.keras.Model([vgg.input], outputs)
 
 
-def avg_mse(outputs: dict[str, tf.Tensor], targets: dict[str, tf.Tensor]) -> tf.Tensor:
+def avg_mse(outputs: Dict[str, tf.Tensor], targets: Dict[str, tf.Tensor]) -> tf.Tensor:
     """ calculates mse for each layer, then returns mean across all layers """
     layer_losses = [
         tf.reduce_mean((outputs[name] - targets[name]) ** 2) for name in outputs.keys()
@@ -64,7 +64,7 @@ class StyleContentLoss:
         self.style_weight = style_weight
         self.content_weight = content_weight
 
-    def __call__(self, outputs: dict[str, dict]):
+    def __call__(self, outputs: Dict[str, Dict]):
         style_loss = avg_mse(outputs["style"], self.style_targets)
         content_loss = avg_mse(outputs["content"], self.content_targets)
         return style_loss * self.style_weight + content_loss * self.content_weight
@@ -79,7 +79,7 @@ class StyleContentModel(tf.keras.models.Model):
         self.num_style_layers = len(style_layers)
         self.vgg_trainable = False
 
-    def call(self, t: tf.Tensor) -> dict[str, dict]:
+    def call(self, t: tf.Tensor) -> Dict[str, Dict]:
         t = t * 255.0
         preprocessed_input = tf.keras.applications.vgg19.preprocess_input(t)
 
