@@ -1,9 +1,9 @@
-from typing import Callable
+from typing import Callable, Tuple
 import numpy as np
 import tensorflow as tf
 
 
-def init_images(content_im: np.ndarray, style_im: np.ndarray) -> tuple[tf.Tensor]:
+def init_images(content_im: np.ndarray, style_im: np.ndarray) -> Tuple[tf.Tensor]:
     """ returns content_im, style_im, and generated_im as tf.Tensors """
     content_im = tf.constant(content_im, dtype=tf.float32)[tf.newaxis, :]
     style_im = tf.constant(style_im, dtype=tf.float32)[tf.newaxis, :]
