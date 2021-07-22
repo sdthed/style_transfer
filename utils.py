@@ -26,7 +26,7 @@ def load_im(
     """ read, reshape, and normalize image """
     im = Image.open(im_path)
     if max_dim is not None:
-        im = resize(im, 200)
+        im = resize(im, max_dim)
     return np.array(im) / 255.0 if normalize else np.array(im)
 
 
