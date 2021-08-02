@@ -33,19 +33,24 @@ def gram_matrix(t: tf.Tensor) -> tf.Tensor:
     return result / tf.cast(num_locations, tf.float32)
 
 
-def print_vgg_layer_names():
-    vgg = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
-    for layer in vgg.layers:
+def print_backbone_layer_names():
+    backbone = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
+    for layer in backbone.layers:
         print(layer.name)
 
 
-def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
-    """ Creates a vgg model that returns a list of intermediate output layers """
-    vgg = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
-    vgg.trainable = False
+def backbone_layers(layer_names: List[str], backbone_name="VGG19") -> tf.keras.Model:
+    """ Creates a backbone model that returns a list of intermediate output layers """
+    if backbone_name == "VGG19":
+        backbone = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
+    elif backbone_name == "ResNet50":
+        backbone = tf.keras.applications.ResNet50(weights="imagenet", include_top=False)
+    else:
+        raise NotADirectoryError(f"{backbone_name} is not a valid backbone name")
 
-    outputs = [vgg.get_layer(name).output for name in layer_names]
-    return tf.keras.Model([vgg.input], outputs)
+    backbone.trainable = False
+    outputs = [backbone.get_layer(name).output for name in layer_names]
+    return tf.keras.Model([backbone.input], outputs)
 
 
 def avg_mse(outputs: Dict[str, tf.Tensor], targets: Dict[str, tf.Tensor]) -> tf.Tensor:
@@ -71,19 +76,29 @@ class StyleContentLoss:
 
 
 class StyleContentModel(tf.keras.models.Model):
-    def __init__(self, style_layers, content_layers):
+    def __init__(self, style_layers, content_layers, backbone_name="VGG19"):
         super(StyleContentModel, self).__init__()
-        self.vgg = vgg_layers(style_layers + content_layers)
+        self.backbone_name = "VGG19"
+        self.backbone = backbone_layers(
+            style_layers + content_layers, backbone_name=backbone_name
+        )
         self.style_layers = style_layers
         self.content_layers = content_layers
         self.num_style_layers = len(style_layers)
-        self.vgg_trainable = False
+        self.backbone_trainable = False
+
+    def preprocess(self, t):
+        if self.backbone_name == "VGG19":
+            return tf.keras.applications.vgg19.preprocess_input(t)
+        elif self.backbone_name == "ResNet50":
+            return tf.keras.applications.resnet50.preprocess_input(t)
 
     def call(self, t: tf.Tensor) -> Dict[str, Dict]:
         t = t * 255.0
-        preprocessed_input = tf.keras.applications.vgg19.preprocess_input(t)
+        # preprocessed_input = tf.keras.applications.vgg19.preprocess_input(t)
+        preprocessed_input = self.preprocess(t)
 
-        outputs = self.vgg(preprocessed_input)
+        outputs = self.backbone(preprocessed_input)
         style_outputs = outputs[: self.num_style_layers]
         content_outputs = outputs[self.num_style_layers :]
 
