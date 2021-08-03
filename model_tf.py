@@ -45,6 +45,10 @@ def backbone_layers(layer_names: List[str], backbone_name="VGG19") -> tf.keras.M
         backbone = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
     elif backbone_name == "ResNet50":
         backbone = tf.keras.applications.ResNet50(weights="imagenet", include_top=False)
+    elif backbone_name == "ResNet152":
+        backbone = tf.keras.applications.ResNet152(
+            weights="imagenet", include_top=False
+        )
     else:
         raise NotADirectoryError(f"{backbone_name} is not a valid backbone name")
 
@@ -92,6 +96,8 @@ class StyleContentModel(tf.keras.models.Model):
             return tf.keras.applications.vgg19.preprocess_input(t)
         elif self.backbone_name == "ResNet50":
             return tf.keras.applications.resnet50.preprocess_input(t)
+        elif self.backbone_name == "ResNet152":
+            return tf.keras.applications.resnet.preprocess_input(t)
 
     def call(self, t: tf.Tensor) -> Dict[str, Dict]:
         t = t * 255.0
